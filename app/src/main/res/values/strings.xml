@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">MediaPlayerApp</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="replay">Replay</string>
+    <string name="prev">Prev</string>
+    <string name="next">Next</string>
+    <string name="stop">Stop</string>
+    <string name="status_ready">Ready to play</string>
+    <string name="open_song_list">Open song list</string>
+    <string name="toggle_favorite">Toggle favorite</string>
+    <string name="all_songs">All Songs</string>
+    <string name="favorites">Favorites</string>
+    <string name="no_songs_found">No songs found on this device</string>
+    <string name="no_favorites_yet">No favorites yet — tap the star on a song</string>
+</resources>
