@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "tech.b4nk4.finalproject"
+    namespace = "tech.b4nk4.mediaplayer"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "tech.b4nk4.finalproject"
+        applicationId = "tech.b4nk4.mediaplayer"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -37,6 +37,10 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.media3.session)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
