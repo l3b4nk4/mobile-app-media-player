@@ -5,5 +5,19 @@
     <string name="replay">Replay</string>
     <string name="prev">Prev</string>
     <string name="next">Next</string>
+    <string name="stop">Stop</string>
     <string name="status_ready">Ready to play</string>
+    <string name="open_song_list">Open sounds</string>
+    <string name="toggle_favorite">Toggle favorite</string>
+    <string name="all_songs">My Sounds</string>
+    <string name="favorites">Favorites</string>
+    <string name="no_songs_found">No sounds found. Try granting permission.</string>
+    <string name="no_favorites_yet">No favorites yet — tap the star on a song</string>
+    <string name="album_art">Album Art</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="search_hint">Search sounds...</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_largest">Largest</string>
+    <string name="sort_alphabetical">A-Z</string>
 </resources>
