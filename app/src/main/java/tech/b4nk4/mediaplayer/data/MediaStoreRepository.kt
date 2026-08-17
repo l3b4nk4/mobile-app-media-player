@@ -7,8 +7,7 @@ import tech.b4nk4.mediaplayer.model.Track
 
 /**
  * Queries the device's MediaStore for all playable audio files.
- * Requires READ_MEDIA_AUDIO (API 33+) or READ_EXTERNAL_STORAGE (below)
- * to already be granted before calling [loadTracks].
+ * Broadened to include all audio files > 2 seconds (recordings, podcasts, etc.)
  */
 object MediaStoreRepository {
 
@@ -21,11 +20,14 @@ object MediaStoreRepository {
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM_ID,
-            MediaStore.Audio.Media.DURATION
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DATE_ADDED
         )
-        // Only actual music/audio tracks, not notification sounds, ringtones, etc.
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
+        
+        // Include any audio file longer than 2 seconds
+        val selection = "${MediaStore.Audio.Media.DURATION} >= 2000"
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         context.contentResolver.query(
             collection,
@@ -39,6 +41,8 @@ object MediaStoreRepository {
             val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
@@ -46,9 +50,11 @@ object MediaStoreRepository {
                 val artist = cursor.getString(artistCol) ?: "Unknown artist"
                 val albumId = cursor.getLong(albumIdCol)
                 val duration = cursor.getLong(durationCol)
+                val size = cursor.getLong(sizeCol)
+                val dateAdded = cursor.getLong(dateCol)
                 val contentUri = ContentUris.withAppendedId(collection, id)
 
-                tracks.add(Track(id, title, artist, albumId, duration, contentUri))
+                tracks.add(Track(id, title, artist, albumId, duration, size, dateAdded, contentUri))
             }
         }
 

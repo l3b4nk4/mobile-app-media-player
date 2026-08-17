@@ -33,7 +33,7 @@
             android:ellipsize="end"
             android:textSize="13sp"
             android:textColor="#757575"
-            tools:text="Artist name" />
+            tools:text="Artist name • 3:45" />
     </LinearLayout>
 
     <ImageButton

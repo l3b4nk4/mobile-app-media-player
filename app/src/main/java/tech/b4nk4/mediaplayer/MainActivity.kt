@@ -8,6 +8,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.MenuItem
+import android.widget.EditText
+import android.widget.PopupMenu
 import androidx.core.view.GravityCompat
 import android.widget.Button
 import android.widget.ImageButton
@@ -59,6 +64,20 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var favoritesManager: FavoritesManager
     private lateinit var trackAdapter: TrackAdapter
+
+    private lateinit var etSearch: EditText
+    private lateinit var btnSort: Button
+    private lateinit var llEmptyState: android.view.View
+    private lateinit var btnGrantPermission: Button
+
+    private var currentSearchQuery = ""
+    private var currentSortMode = SORT_ALPHABETICAL
+
+    companion object {
+        private const val SORT_ALPHABETICAL = 0
+        private const val SORT_NEWEST = 1
+        private const val SORT_LARGEST = 2
+    }
 
     /** All tracks found on the device via MediaStore. */
     private var allTracks: List<Track> = emptyList()
@@ -132,8 +151,12 @@ class MainActivity : AppCompatActivity() {
         drawerLayout = findViewById(R.id.drawerLayout)
         rvTracks = findViewById(R.id.rvTracks)
         tvEmptyState = findViewById(R.id.tvEmptyState)
+        llEmptyState = findViewById(R.id.llEmptyState)
+        btnGrantPermission = findViewById(R.id.btnGrantPermission)
         btnShowAllSongs = findViewById(R.id.btnShowAllSongs)
         btnShowFavorites = findViewById(R.id.btnShowFavorites)
+        etSearch = findViewById(R.id.etSearch)
+        btnSort = findViewById(R.id.btnSort)
 
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -193,6 +216,33 @@ class MainActivity : AppCompatActivity() {
             showingFavorites = true
             refreshDrawerList()
         }
+
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                currentSearchQuery = s?.toString() ?: ""
+                refreshDrawerList()
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        btnSort.setOnClickListener { showSortMenu() }
+        btnGrantPermission.setOnClickListener { ensureAudioPermissionThenLoad() }
+    }
+
+    private fun showSortMenu() {
+        val popup = PopupMenu(this, btnSort)
+        popup.menu.add(0, SORT_ALPHABETICAL, 0, getString(R.string.sort_alphabetical))
+        popup.menu.add(0, SORT_NEWEST, 1, getString(R.string.sort_newest))
+        popup.menu.add(0, SORT_LARGEST, 2, getString(R.string.sort_largest))
+
+        popup.setOnMenuItemClickListener { item: MenuItem ->
+            currentSortMode = item.itemId
+            btnSort.text = item.title
+            refreshDrawerList()
+            true
+        }
+        popup.show()
     }
 
     private fun ensureAudioPermissionThenLoad() {
@@ -214,10 +264,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun currentDisplayedTracks(): List<Track> {
-        return if (showingFavorites) {
+        val list = if (showingFavorites) {
             allTracks.filter { favoritesManager.isFavorite(it.id) }
         } else {
             allTracks
+        }
+
+        val filtered = if (currentSearchQuery.isEmpty()) {
+            list
+        } else {
+            list.filter {
+                it.title.contains(currentSearchQuery, ignoreCase = true) ||
+                it.artist.contains(currentSearchQuery, ignoreCase = true)
+            }
+        }
+
+        return when (currentSortMode) {
+            SORT_NEWEST -> filtered.sortedByDescending { it.dateAdded }
+            SORT_LARGEST -> filtered.sortedByDescending { it.size }
+            else -> filtered.sortedBy { it.title.lowercase() }
         }
     }
 
@@ -231,8 +296,10 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.no_songs_found)
         }
         tvEmptyState.text = emptyMessage
-        tvEmptyState.visibility = if (tracks.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-        rvTracks.visibility = if (tracks.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+        
+        val isEmpty = tracks.isEmpty()
+        llEmptyState.visibility = if (isEmpty) android.view.View.VISIBLE else android.view.View.GONE
+        rvTracks.visibility = if (isEmpty) android.view.View.GONE else android.view.View.VISIBLE
     }
 
     private fun playFromList(tracks: List<Track>, selected: Track) {

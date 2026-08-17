@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import tech.b4nk4.mediaplayer.R
 import tech.b4nk4.mediaplayer.model.Track
 
+import java.util.Locale
+
 class TrackAdapter(
     private val isFavorite: (Track) -> Boolean,
     private val onTrackClick: (Track) -> Unit,
@@ -37,7 +39,11 @@ class TrackAdapter(
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
         val track = tracks[position]
         holder.tvTitle.text = track.title
-        holder.tvArtist.text = track.artist
+        
+        val duration = track.durationMs / 1000
+        val mins = duration / 60
+        val secs = duration % 60
+        holder.tvArtist.text = "${track.artist} • ${String.format(java.util.Locale.getDefault(), "%d:%02d", mins, secs)}"
 
         val favorited = isFavorite(track)
         holder.btnFavorite.setImageResource(

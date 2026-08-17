@@ -11,5 +11,7 @@ data class Track(
     val artist: String,
     val albumId: Long,
     val durationMs: Long,
+    val size: Long,
+    val dateAdded: Long,
     val contentUri: Uri
 )
