@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.media3.session)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.drawerlayout)
+    implementation(libs.coil)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)

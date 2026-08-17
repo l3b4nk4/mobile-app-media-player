@@ -13,4 +13,5 @@
     <string name="favorites">Favorites</string>
     <string name="no_songs_found">No songs found on this device</string>
     <string name="no_favorites_yet">No favorites yet — tap the star on a song</string>
+    <string name="album_art">Album Art</string>
 </resources>

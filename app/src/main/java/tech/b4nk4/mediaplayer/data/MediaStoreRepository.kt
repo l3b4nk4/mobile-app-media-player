@@ -20,6 +20,7 @@ object MediaStoreRepository {
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.DURATION
         )
         // Only actual music/audio tracks, not notification sounds, ringtones, etc.
@@ -36,16 +37,18 @@ object MediaStoreRepository {
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+            val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
                 val title = cursor.getString(titleCol) ?: "Unknown title"
                 val artist = cursor.getString(artistCol) ?: "Unknown artist"
+                val albumId = cursor.getLong(albumIdCol)
                 val duration = cursor.getLong(durationCol)
                 val contentUri = ContentUris.withAppendedId(collection, id)
 
-                tracks.add(Track(id, title, artist, duration, contentUri))
+                tracks.add(Track(id, title, artist, albumId, duration, contentUri))
             }
         }
 

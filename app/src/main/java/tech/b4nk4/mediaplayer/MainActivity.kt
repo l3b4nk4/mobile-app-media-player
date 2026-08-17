@@ -3,13 +3,15 @@ package tech.b4nk4.mediaplayer
 import android.Manifest
 import android.content.ComponentName
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
+import androidx.core.view.GravityCompat
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -19,11 +21,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import tech.b4nk4.mediaplayer.data.FavoritesManager
@@ -39,13 +43,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var tvNowPlaying: TextView
+    private lateinit var ivAlbumArt: ImageView
     private lateinit var seekBar: SeekBar
-    private lateinit var btnPlay: Button
-    private lateinit var btnPause: Button
-    private lateinit var btnStop: Button
-    private lateinit var btnReplay: Button
-    private lateinit var btnPrev: Button
-    private lateinit var btnNext: Button
+    private lateinit var btnPlayPause: ImageButton
+    private lateinit var btnReplay: ImageButton
+    private lateinit var btnPrev: ImageButton
+    private lateinit var btnNext: ImageButton
     private lateinit var btnOpenDrawer: ImageButton
 
     private lateinit var drawerLayout: DrawerLayout
@@ -118,10 +121,9 @@ class MainActivity : AppCompatActivity() {
 
         tvStatus = findViewById(R.id.tvStatus)
         tvNowPlaying = findViewById(R.id.tvNowPlaying)
+        ivAlbumArt = findViewById(R.id.ivAlbumArt)
         seekBar = findViewById(R.id.seekBar)
-        btnPlay = findViewById(R.id.btnPlay)
-        btnPause = findViewById(R.id.btnPause)
-        btnStop = findViewById(R.id.btnStop)
+        btnPlayPause = findViewById(R.id.btnPlayPause)
         btnReplay = findViewById(R.id.btnReplay)
         btnPrev = findViewById(R.id.btnPrev)
         btnNext = findViewById(R.id.btnNext)
@@ -143,13 +145,12 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         ensureAudioPermissionThenLoad()
 
-        btnOpenDrawer.setOnClickListener { drawerLayout.openDrawer(Gravity.START) }
+        btnOpenDrawer.setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
 
-        btnPlay.setOnClickListener { controller?.play() }
-        btnPause.setOnClickListener { controller?.pause() }
-        btnStop.setOnClickListener {
-            controller?.stop()
-            seekBar.progress = 0
+        btnPlayPause.setOnClickListener {
+            controller?.let { ctrl ->
+                if (ctrl.isPlaying) ctrl.pause() else ctrl.play()
+            }
         }
         btnReplay.setOnClickListener {
             controller?.seekTo(0)
@@ -237,14 +238,24 @@ class MainActivity : AppCompatActivity() {
     private fun playFromList(tracks: List<Track>, selected: Track) {
         val ctrl = controller ?: return
         val startIndex = tracks.indexOf(selected).coerceAtLeast(0)
-        val mediaItems = tracks.map { MediaItem.fromUri(it.contentUri) }
+        val mediaItems = tracks.map { track ->
+            val metadata = MediaMetadata.Builder()
+                .setTitle(track.title)
+                .setArtist(track.artist)
+                .setArtworkUri(Uri.parse("content://media/external/audio/albumart/${track.albumId}"))
+                .build()
+            MediaItem.Builder()
+                .setMediaId(track.id.toString())
+                .setUri(track.contentUri)
+                .setMediaMetadata(metadata)
+                .build()
+        }
 
         ctrl.setMediaItems(mediaItems, startIndex, 0L)
         ctrl.prepare()
         ctrl.play()
 
-        tvNowPlaying.text = "${selected.title} — ${selected.artist}"
-        drawerLayout.closeDrawer(Gravity.START)
+        drawerLayout.closeDrawer(GravityCompat.START)
     }
 
     // --- Player controller ---------------------------------------------------
@@ -272,8 +283,22 @@ class MainActivity : AppCompatActivity() {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     if (isPlaying) {
                         tvStatus.text = "Playing"
+                        btnPlayPause.setImageResource(R.drawable.ic_pause)
                     } else if (ctrl.playbackState != Player.STATE_ENDED) {
                         tvStatus.text = "Paused"
+                        btnPlayPause.setImageResource(R.drawable.ic_play)
+                    }
+                }
+
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    val title = mediaMetadata.title ?: "Unknown Title"
+                    val artist = mediaMetadata.artist ?: "Unknown Artist"
+                    tvNowPlaying.text = "$title — $artist"
+
+                    ivAlbumArt.load(mediaMetadata.artworkUri) {
+                        placeholder(R.drawable.ic_default_album_art)
+                        error(R.drawable.ic_default_album_art)
+                        crossfade(true)
                     }
                 }
             })
